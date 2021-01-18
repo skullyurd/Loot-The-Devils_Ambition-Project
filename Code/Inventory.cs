@@ -10,6 +10,9 @@ public class Inventory : MonoBehaviour
     [SerializeField] public static Inventory instance;
 
     [SerializeField] private GameObject player;
+    [SerializeField] private Player playerScript;
+
+    private bool inCombatInventory;
 
     public List<Item> Items;
     public int maxSlots = 10;
@@ -89,25 +92,29 @@ public class Inventory : MonoBehaviour
         }
 
     }
-    public void useItem(Item b, string itemName, InventoryUIItem UIITem)
+    public void useItem(Item b, string itemName)
     {
+        playerScript.combatCheckResult();
+        
+        if(inCombatInventory == true)
+        {
+            playerScript.giveTurn();
+        }
+
+
+
         if (b != null)
         {
             if (b is Consumable)
             {
 
-                InventoryUIItem deleteUIItem = UIITem;
-
                 Consumable f = (Consumable)b;
 
-                Debug.Log(f.healthPointRestore);
-                Debug.Log(f.name);
+                playerScript.playerHeals(f.healthPointRestore);
 
-                InventoryUIItem.instance.itemName.text = f.name;
-
-                deleteUIItem.HandleClick();
-
-
+                InventoryUI.instance.RemoveUIItem(f.name);
+                GameObject Target =  GameObject.Find(f.name);
+                Destroy(Target);
 
             }
 
@@ -131,7 +138,11 @@ public class Inventory : MonoBehaviour
 
 
             }
-
         }
+    }
+
+    public void combatCheckRequest(bool inCombat)
+    {
+        inCombatInventory = inCombat;
     }
 }

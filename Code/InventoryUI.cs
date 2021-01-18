@@ -37,7 +37,6 @@ public class InventoryUI : MonoBehaviour
                 uiItems.Add(p);
             }
         }
-
     }
 
     public void RemoveUIItem(string name)
@@ -54,19 +53,32 @@ public class InventoryUI : MonoBehaviour
             }
         }
     }
-    public void useItemInventory(string itemName, InventoryUIItem UIITem)
+    public void useItemInventory(string itemName)
     {
         for (int i = 0; i < uiItems.Count; i++)
         {
             PIckUp p = uiItems[i];
             if (p.item.name == itemName)
             {
-                InventoryUIItem inventoryUI = UIITem;
 
-                Inventory.instance.useItem(p.item, p.item.name, inventoryUI);
+                Inventory.instance.useItem(p.item, p.item.name);
                 break;
             }
         }
     }
 
+    public void identifyItem(string itemName)
+    {
+        for (int i = 0; i < uiItems.Count; i++)
+        {
+            PIckUp p = uiItems[i];
+            if (p.item.name == itemName)
+            {
+
+                InventoryUIBase.instance.AddUIItem(p);
+                InventoryBase.instance.AddItem(p.item);
+                break;
+            }
+        }
+    }
 }

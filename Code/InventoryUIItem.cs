@@ -6,7 +6,6 @@ using TMPro;
 
 public class InventoryUIItem : MonoBehaviour
 {
-
     public static InventoryUIItem instance;
 
     public Image itemImage;
@@ -26,19 +25,51 @@ public class InventoryUIItem : MonoBehaviour
 
     public void HandleClick()
     {
-        Debug.Log(itemName.text);
-
         GameObject targetName = GameObject.Find(itemName.text);
-
         InventoryUI.instance.RemoveUIItem(itemName.text);
         Destroy(targetName);
     }
 
     public void useItem()
     {
-        InventoryUIItem UIItem = instance;
+        GameObject targetName = GameObject.Find(itemName.text);
 
-        InventoryUI.instance.useItemInventory(itemName.text, UIItem);
+
+
+        if (Player.instance.isInBase == true)
+        {
+            Debug.Log("move to base");
+
+            if (transform.parent.gameObject.name == "inventoryPanel_Base")
+            {
+                InventoryUIBase.instance.identifyItem(itemName.text);
+
+                InventoryUIBase.instance.RemoveUIItem(itemName.text);
+                Destroy(targetName);
+                return;
+            }
+            if (transform.parent.gameObject.name == "inventory_panel")
+            {
+                
+                InventoryUI.instance.identifyItem(itemName.text);
+
+                InventoryUI.instance.RemoveUIItem(itemName.text);
+                Destroy(targetName);
+                return;
+            }
+
+
+
+
+
+            
+
+        }
+
+        if (Player.instance.isInBase == false)
+        {
+            InventoryUI.instance.useItemInventory(itemName.text);
+
+        }
     }
-
 }

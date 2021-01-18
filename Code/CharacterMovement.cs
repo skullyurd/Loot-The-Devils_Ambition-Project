@@ -51,8 +51,27 @@ public class CharacterMovement : MonoBehaviour
 
     public void combatDoneAnimation()
     {
+        Debug.Log("asss");
         thisAnimator.SetBool("bDaggerOutRight", false);
         thisAnimator.SetFloat("locomotion", 1);
         thisAnimator.SetBool("bDaggerBackRight", true);
+    }
+
+    public void dodgeAnimation()
+    {
+        thisAnimator.SetBool("bTaunt", false);
+        thisAnimator.SetBool("bTaunt", true);
+    }
+
+    public void attackAnimation()
+    {
+        thisAnimator.SetBool("bAttack1Right", false);
+        thisAnimator.SetBool("bAttack1Right", true);
+    }
+
+    public void getsHitAnimation()
+    {
+        thisAnimator.SetBool("gotHit", false);
+        thisAnimator.SetBool("gotHit", true);
     }
 }

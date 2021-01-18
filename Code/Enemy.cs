@@ -22,19 +22,23 @@ public class Enemy : MonoBehaviour
     [SerializeField] private int creatureHealingItems;
     [SerializeField] private int creatureHealingAmount;
 
+    [SerializeField] private int creatureMagicCharges;
+    [SerializeField] private int creatureMagicDamage;
+
     [SerializeField] private GameObject creatureTargetAgent;
     [SerializeField] private GameObject[] possibleLoot;
 
-    [SerializeField] private Player creatureTargetAgentScript;
+    private Player creatureTargetAgentScript;
 
     [SerializeField] private bool creatureCanUseMagic;
 
-    [SerializeField] private bool creatureTurn;
+    private bool creatureTurn;
 
     [SerializeField] private Animator thisAnimator;
 
     [SerializeField] private string idleAnimationName;
     [SerializeField] private string hitAnimationName;
+    [SerializeField] private string magicAnimationName;
     [SerializeField] private string dodgeAnimationName;
     [SerializeField] private string attackAnimationName;
     [SerializeField] private string healAnimationName;
@@ -45,7 +49,7 @@ public class Enemy : MonoBehaviour
     {
 
         Agent HostileAgent = new EnemyStats(name: creatureName, strength: creatureStrength, healthpoints: creatureHealthpoints, maxHealthPoints: creatureMaxHealthPoints ,vitality: creatureVitality, minAttackPower: creatureMinAttackpower, maxAttackPower: creatureMaxAttackpower, armor: creatureArmor, dexterity: creatureDexterity, dodge: creatureDodge, targetAgent: creatureTargetAgent, myTurn: creatureTurn ,givenXP: creatureGivenxp, healingItems: creatureHealingItems, healingAmount: creatureHealingAmount, canUseMagic: creatureCanUseMagic);
-        thisAnimator.SetFloat(idleAnimationName, 1);
+        thisAnimator.SetBool(idleAnimationName, true);
         thisAnimator.SetBool(combatReadyAnimationName, true);
         
         this.transform.eulerAngles = new Vector3(0, -90, 0);
@@ -75,17 +79,19 @@ public class Enemy : MonoBehaviour
         }
         else
         {
+
             creatureHealthpoints -= incomingDamage;
 
-            thisAnimator.SetBool(hitAnimationName, false);
-            thisAnimator.SetBool(hitAnimationName, true);
+            if (creatureHealthpoints > 0)
+            {
+                thisAnimator.SetBool(hitAnimationName, false);
+                thisAnimator.SetBool(hitAnimationName, true);
 
-            Debug.Log("creature got hit");
-
+                Debug.Log("creature got hit");
+            }
             if (creatureHealthpoints < 1)
             {
                 creatureDying();
-
             }
         }
     }
@@ -95,7 +101,7 @@ public class Enemy : MonoBehaviour
         Debug.Log("creature gives damage");
 
         //attack animation
-        thisAnimator.SetBool(attackAnimationName, false);
+        thisAnimator.SetBool(attackAnimationName, false); //or block animation, health gets the same effect anyways
         thisAnimator.SetBool(attackAnimationName, true);
 
         int rngAttackPower;
@@ -109,7 +115,6 @@ public class Enemy : MonoBehaviour
     public void creatureDying()
     {
         //dying animation
-        thisAnimator.SetBool(dyingAnimationName, false);
         thisAnimator.SetBool(dyingAnimationName, true);
 
 
@@ -129,41 +134,55 @@ public class Enemy : MonoBehaviour
         }
         if(creatureTurn == true)
         {
-            Debug.Log("creature got turn");
-
-            int diceAction;
-            diceAction = Random.Range(0, 3);
-
-            switch (diceAction)
+            if(creatureHealthpoints > 0)
             {
-                case 0:
-                    Invoke("giveDamage", 1.5f);
-                    break;
+                Debug.Log("creature got turn");
 
-                case 1:
+                int diceAction;
+                diceAction = Random.Range(0, 3);
 
-                    //heal animation?
-
-                    Invoke("creatureHeals", 1.5f);
-                    creatureTurn = false;
-                    creatureTargetAgentScript.getsTurn(true);
-                    Debug.Log("creature turns ended");
-                    break;
-
-                case 2:        //magic
-                    if (creatureCanUseMagic == true)
-                    {
-                        //magic animation
-                    }
-                    if (creatureCanUseMagic == false)
-                    {
-                        Debug.Log("the creature wanted to use magic but couldn't do it.");
+                switch (diceAction)
+                {
+                    case 0:
                         Invoke("giveDamage", 1.5f);
-                    }
-                    creatureTurn = false;
-                    creatureTargetAgentScript.getsTurn(true);
-                    Debug.Log("creature turns ended");
-                    break;
+                        break;
+
+                    case 1:
+
+                        //heal animation?
+
+                        Invoke("creatureHeals", 1.5f);
+                        break;
+
+                    case 2:        //magic
+                        if (creatureCanUseMagic == true)
+                        {
+                            if(creatureMagicCharges > 0)
+                            {
+                                creatureMagicCharges--;
+
+                                thisAnimator.SetBool(magicAnimationName, false);
+                                thisAnimator.SetBool(magicAnimationName, true);
+
+                                Invoke("giveTurn", 3);
+                                creatureTurn = false;
+                                creatureTargetAgentScript.getsTurn(true);
+                                creatureTargetAgentScript.getsHit(creatureMagicDamage);
+
+                                Debug.Log("creature turns ended");
+                                break;
+                            }
+                        }
+                        if (creatureCanUseMagic == false || creatureMagicCharges < 1)
+                        {
+                            Debug.Log("the creature wanted to use magic but couldn't do it.");
+                            Invoke("giveDamage", 1.5f);
+                        }
+                        creatureTurn = false;
+                        creatureTargetAgentScript.getsTurn(true);
+                        Debug.Log("creature turns ended");
+                        break;
+                }
             }
         }
     }
@@ -181,7 +200,7 @@ public class Enemy : MonoBehaviour
         Debug.Log("the creature rolled healing");
 
 
-        if (creatureHealthpoints > 20 || creatureHealingItems < 1 || creatureHealthpoints == 20)
+        if (creatureHealthpoints > creatureMaxHealthPoints/5 || creatureHealingItems < 1)
         {
             Debug.Log("the creature wanted to heal but didn't/couldn't do it");
 
@@ -201,6 +220,12 @@ public class Enemy : MonoBehaviour
 
     public void dropLoot()
     {
+        if(possibleLoot[0] == null)
+        {
+            Destroy(this.gameObject);
+            return;
+        }
+
         int rngLoot;
         rngLoot = Random.Range(0, possibleLoot.Length);
 

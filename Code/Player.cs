@@ -1,9 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class Player : MonoBehaviour
 {
+    public static Player instance;
+
     [SerializeField] private string playerName;
 
     [SerializeField] private int playerStrength;
@@ -27,7 +30,7 @@ public class Player : MonoBehaviour
     [SerializeField] private int playerMaxHunger;
     [SerializeField] private int playerRunAwayChance;
 
-    [SerializeField] private GameObject playerTargetAgent;
+    private GameObject playerTargetAgent;
     [SerializeField] private Enemy playerTargetAgentScript;
 
     [SerializeField] private CharacterMovement walkingScript;
@@ -35,9 +38,40 @@ public class Player : MonoBehaviour
 
     [SerializeField] private bool playerTurn;
     [SerializeField] private bool gotPenalty;
+    [SerializeField] private bool isInCombat;
+    [SerializeField] public bool isInBase;
+
+    private void Awake()
+    {
+
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(obj: this);
+        }
+
+        Debug.Log(instance);
+
+    }
 
     public void Start()
     {
+
+
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(obj: this);
+        }
+
         Agent playerAgent = new PlayerStats(name: playerName, strength: playerStrength, healthpoints: playerHealthpoints, maxHealthPoints: playerMaxHealthPoints , vitality: playerVitality, minAttackPower: playerMinAttackpower, maxAttackPower: playerMaxAttackpower ,armor: playerArmor, dexterity: playerDexterity,dodge: playerDodge, targetAgent: playerTargetAgent, myTurn: playerTurn, skillpoints: playerSkillpoints, expierencePointsToLevel: playerExpierencePointsToLevel, currentExpierencePoints: playerCurrentExpierencePoints, level: playerLevel, currentEnergy:playerCurrentEnergy, maxEnergy: playerMaxEnergy, currentHunger:playerCurrentHunger, maxHunger: playerMaxHunger, runAwayChance: playerRunAwayChance);
         statsInfluence();
     }
@@ -55,6 +89,7 @@ public class Player : MonoBehaviour
 
     public void CombatStarts()
     {
+        isInCombat = true;
         playerTargetAgent = GameObject.FindGameObjectWithTag("Enemy");
         playerTargetAgentScript = playerTargetAgent.GetComponent<Enemy>();
         walkingScript.enabled = false;
@@ -77,10 +112,13 @@ public class Player : MonoBehaviour
         if (chanceDodge < playerDodge)
         {
             Debug.Log("player dodged");
+            walkingScript.dodgeAnimation();
             return;
         }
         else
         {
+            walkingScript.getsHitAnimation();
+
             Debug.Log("incoming damage before armor" + incomingDamage);
 
             incomingDamage = incomingDamage - playerArmor;
@@ -102,6 +140,8 @@ public class Player : MonoBehaviour
     public void giveDamage()
     {
         Debug.Log("player gives damage");
+
+        walkingScript.attackAnimation();
 
         int rngAttackPower;
         rngAttackPower = Random.Range(playerMinAttackpower, playerMaxAttackpower);
@@ -158,7 +198,8 @@ public class Player : MonoBehaviour
 
     public void outOfCombat()
     {
-        walkingScript.combatDoneAnimation();
+        isInCombat = false;
+        walkingScript.Invoke("combatDoneAnimation", 2);
         walkingScript.enabled = true;
         playerTurn = false;
         playerCurrentEnergy -= 15;
@@ -224,4 +265,25 @@ public class Player : MonoBehaviour
             statsInfluence();
         }
     }
+
+    public void combatCheckResult()
+    {
+        bool inCombat;
+        inCombat = isInCombat;
+
+        Inventory.instance.combatCheckRequest(inCombat);
+    }
+
+    public void playerHeals(int healingpoints)
+    {
+        if(playerHealthpoints < playerMaxHealthPoints)
+        {
+            playerHealthpoints += healingpoints;
+            if(playerHealthpoints > playerMaxHealthPoints)
+            {
+                playerHealthpoints = playerMaxHealthPoints;
+            }
+        }
+    }
+
 }

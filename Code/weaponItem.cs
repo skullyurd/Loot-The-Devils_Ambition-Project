@@ -5,13 +5,13 @@ using UnityEngine;
 public class weaponItem : PIckUp
 {
 
-    [SerializeField] string  weaponName;
-    [SerializeField] string weaponItemType;
-    [SerializeField] private int weaponItemID;
-    [SerializeField] private int weaponStrengthNeeded;
-    [SerializeField] private int weaponDexterityNeeded;
-    [SerializeField] string weaponEquipmentType;
-    [SerializeField] private int weaponAddedAttackPower;
+    [SerializeField]   string  weaponName;
+        [SerializeField] string weaponItemType;
+    [SerializeField]     private int weaponItemID;
+    [SerializeField]     private int weaponStrengthNeeded;
+    [SerializeField]     private int weaponDexterityNeeded;
+    [SerializeField]     string weaponEquipmentType;
+    [SerializeField]     private int weaponAddedAttackPower;
 
     public override void Start()
     {
@@ -22,4 +22,6 @@ public class weaponItem : PIckUp
     {
 
     }
+
+    
 }
