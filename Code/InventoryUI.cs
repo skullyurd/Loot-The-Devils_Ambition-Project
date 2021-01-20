@@ -41,7 +41,6 @@ public class InventoryUI : MonoBehaviour
 
     public void RemoveUIItem(string name)
     {
-
         for (int i = 0; i < uiItems.Count; i++)
         {
             PIckUp p = uiItems[i];
@@ -60,7 +59,6 @@ public class InventoryUI : MonoBehaviour
             PIckUp p = uiItems[i];
             if (p.item.name == itemName)
             {
-
                 Inventory.instance.useItem(p.item, p.item.name);
                 break;
             }

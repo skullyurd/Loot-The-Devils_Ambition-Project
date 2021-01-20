@@ -17,7 +17,11 @@ public class CharacterMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKey(KeyCode.D))
+        Vector3 tempPos = transform.position;
+        tempPos.x = Mathf.Clamp(tempPos.x, -5.0f, 200.0f);
+        transform.position = tempPos;
+
+        if (Input.GetKey(KeyCode.D))
         {
             thisAnimator.SetFloat("locomotion", 3);
             this.transform.eulerAngles = new Vector3(0, 90, 0);
@@ -51,7 +55,6 @@ public class CharacterMovement : MonoBehaviour
 
     public void combatDoneAnimation()
     {
-        Debug.Log("asss");
         thisAnimator.SetBool("bDaggerOutRight", false);
         thisAnimator.SetFloat("locomotion", 1);
         thisAnimator.SetBool("bDaggerBackRight", true);
@@ -73,5 +76,10 @@ public class CharacterMovement : MonoBehaviour
     {
         thisAnimator.SetBool("gotHit", false);
         thisAnimator.SetBool("gotHit", true);
+    }
+
+    public void dieAnimation()
+    {
+        thisAnimator.SetBool("die", true);
     }
 }

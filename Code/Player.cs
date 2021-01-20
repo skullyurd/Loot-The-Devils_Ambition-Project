@@ -1,11 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using TMPro;
 
 public class Player : MonoBehaviour
 {
-    public static Player instance;
+    [SerializeField] public static Player instance;
 
     [SerializeField] private string playerName;
 
@@ -30,6 +32,10 @@ public class Player : MonoBehaviour
     [SerializeField] private int playerMaxHunger;
     [SerializeField] private int playerRunAwayChance;
 
+    [SerializeField] private Image energyFill;
+    [SerializeField] private Image HealthFill;
+    [SerializeField] private Image XPFill;
+
     private GameObject playerTargetAgent;
     [SerializeField] private Enemy playerTargetAgentScript;
 
@@ -40,6 +46,28 @@ public class Player : MonoBehaviour
     [SerializeField] private bool gotPenalty;
     [SerializeField] private bool isInCombat;
     [SerializeField] public bool isInBase;
+
+    [SerializeField] private bool gotBonus;
+
+    [SerializeField] private Transform checkPoint;
+    [SerializeField] private GameObject EnemyTrigger;
+
+    [SerializeField] private Text strengthText;
+    [SerializeField] private Text dexterityText;
+    [SerializeField] private Text vitalityText;
+    [SerializeField] private Text skillpointsText;
+
+    [SerializeField] private Text levelText;
+    [SerializeField] private Text dodgeText;
+    [SerializeField] private Text attackPowerText;
+    [SerializeField] private Text armorText;
+
+    [SerializeField] private GameObject improveStrength;
+    [SerializeField] private GameObject improveVitality;
+    [SerializeField] private GameObject improveDexterity;
+    [SerializeField] private GameObject homeButton;
+    [SerializeField] private AudioClip[] wildernessMusic;
+    [SerializeField] private AudioSource thisAuido;
 
     private void Awake()
     {
@@ -60,35 +88,47 @@ public class Player : MonoBehaviour
 
     public void Start()
     {
-
-
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(obj: this);
-        }
-
         Agent playerAgent = new PlayerStats(name: playerName, strength: playerStrength, healthpoints: playerHealthpoints, maxHealthPoints: playerMaxHealthPoints , vitality: playerVitality, minAttackPower: playerMinAttackpower, maxAttackPower: playerMaxAttackpower ,armor: playerArmor, dexterity: playerDexterity,dodge: playerDodge, targetAgent: playerTargetAgent, myTurn: playerTurn, skillpoints: playerSkillpoints, expierencePointsToLevel: playerExpierencePointsToLevel, currentExpierencePoints: playerCurrentExpierencePoints, level: playerLevel, currentEnergy:playerCurrentEnergy, maxEnergy: playerMaxEnergy, currentHunger:playerCurrentHunger, maxHunger: playerMaxHunger, runAwayChance: playerRunAwayChance);
-        statsInfluence();
-    }
 
-    public void Update()
-    {
-        if(playerTurn == true)
-        {
-            if(Input.GetKeyUp(KeyCode.Space))
-            {
-                Invoke("giveDamage", 0.25f);
-            }
-        }
+        energyFill = GameObject.Find("Energy_Bar/Filler").GetComponent<Image>();
+        XPFill = GameObject.Find("XP_Bar/Filler").GetComponent<Image>();
+        HealthFill = GameObject.Find("Health_Bar/Filler").GetComponent<Image>();
+        combatManagerScript = GameObject.FindGameObjectWithTag("ManagerFight").GetComponent<combatManager>();
+
+        strengthText = GameObject.Find("Strength_text").GetComponent<Text>();
+        dexterityText = GameObject.Find("dexterity_text").GetComponent<Text>();
+        vitalityText = GameObject.Find("Vitality_text").GetComponent<Text>();
+        skillpointsText = GameObject.Find("Skillpoints_text").GetComponent<Text>();
+
+        levelText = GameObject.Find("Level_text").GetComponent<Text>();
+        dodgeText = GameObject.Find("dodge_text").GetComponent<Text>();
+        attackPowerText = GameObject.Find("attackPower_text").GetComponent<Text>();
+        armorText = GameObject.Find("Armor_text").GetComponent<Text>();
+
+        improveDexterity = GameObject.Find("improve_dexterity");
+        improveStrength = GameObject.Find("improve_Strength");
+        improveVitality = GameObject.Find("improve_vitality");
+
+        thisAuido.clip = wildernessMusic[0];
+        thisAuido.Play();
+
+        improveDexterity.SetActive(false);
+        improveStrength.SetActive(false);
+        improveVitality.SetActive(false);
+
+        statsInfluence();
+
+        updateEnergyBar();
+        updateHealthBar();
+        updateXPBar();
     }
 
     public void CombatStarts()
     {
+        homeButton = GameObject.Find("GoHome_Button");
+
+        homeButton.SetActive(false);
+
         isInCombat = true;
         playerTargetAgent = GameObject.FindGameObjectWithTag("Enemy");
         playerTargetAgentScript = playerTargetAgent.GetComponent<Enemy>();
@@ -96,9 +136,8 @@ public class Player : MonoBehaviour
         walkingScript.combatReadyAnimation();
         combatManagerScript.combatStartUp();
 
-        //UI shows up
-
-
+        thisAuido.clip = wildernessMusic[1];
+        thisAuido.Play();
     }
 
     public void getsHit(int incomingDamage)
@@ -111,7 +150,6 @@ public class Player : MonoBehaviour
 
         if (chanceDodge < playerDodge)
         {
-            Debug.Log("player dodged");
             walkingScript.dodgeAnimation();
             return;
         }
@@ -119,51 +157,54 @@ public class Player : MonoBehaviour
         {
             walkingScript.getsHitAnimation();
 
-            Debug.Log("incoming damage before armor" + incomingDamage);
-
             incomingDamage = incomingDamage - playerArmor;
-
-            Debug.Log("incoming damage after armor" + incomingDamage);
 
             playerHealthpoints -= incomingDamage;
 
-            Debug.Log("player gets hit");
+            updateHealthBar();
 
             if (playerHealthpoints < 1)
             {
-                Debug.Log("player died");
-                //player dying 
+                walkingScript.dieAnimation();
+                Invoke("gameOverScreen", 1.5f);
             }
         }
+        removeBonus();
     }
 
     public void giveDamage()
     {
-        Debug.Log("player gives damage");
+        if (playerTurn == true)
+        {
+            walkingScript.attackAnimation();
 
-        walkingScript.attackAnimation();
+            int rngAttackPower;
+            rngAttackPower = Random.Range(playerMinAttackpower, playerMaxAttackpower);
 
-        int rngAttackPower;
-        rngAttackPower = Random.Range(playerMinAttackpower, playerMaxAttackpower);
+            playerTargetAgentScript.getsHit(rngAttackPower);
 
-        playerTargetAgentScript.getsHit(rngAttackPower);
-
-        Invoke("giveTurn", 0.35f);
-
+            Invoke("giveTurn", 0.35f);
+        }
     }
 
     public void getExpierencePoints(int incomingExpierencePoints)
     {
         playerCurrentExpierencePoints += incomingExpierencePoints;
 
-        if(playerCurrentExpierencePoints > playerExpierencePointsToLevel)
+        updateXPBar();
+
+        if (playerCurrentExpierencePoints > playerExpierencePointsToLevel)
         {
             playerLevel++;
-            playerSkillpoints++;
+            playerSkillpoints += 2;
+            levelText.text = "Level: " + playerLevel;
+            skillpointsText.text = "Skillpoints: " + playerSkillpoints;
 
-            Debug.Log("player leveled up");
             playerCurrentExpierencePoints = playerCurrentExpierencePoints - playerExpierencePointsToLevel;
             playerExpierencePointsToLevel = playerExpierencePointsToLevel * 3;
+
+            updateXPBar();
+            improveStatsActive();
         }
     }
 
@@ -198,39 +239,69 @@ public class Player : MonoBehaviour
 
     public void outOfCombat()
     {
+        homeButton.SetActive(true);
+
+        thisAuido.clip = wildernessMusic[0];
+        thisAuido.Play();
+
         isInCombat = false;
-        walkingScript.Invoke("combatDoneAnimation", 2);
+        walkingScript.Invoke("combatDoneAnimation", 1f);
         walkingScript.enabled = true;
         playerTurn = false;
         playerCurrentEnergy -= 15;
+        updateEnergyBar();
         penaltyCheck();
+        combatManagerScript.UIreset();
     }
 
     public void runAwayAttempt()
     {
-        int rngRunAwayChance;
-        rngRunAwayChance = Random.Range(0, 101);
-
-        if (rngRunAwayChance > playerRunAwayChance)
+        if(playerTurn == true)
         {
-            runningAway();
+            int rngRunAwayChance;
+            rngRunAwayChance = Random.Range(0, 101);
+
+            if (rngRunAwayChance > playerRunAwayChance)
+            {
+                runningAway();
+            }
+            if (rngRunAwayChance < playerRunAwayChance)
+            {
+                giveTurn();
+            }
         }
     }
 
     public void runningAway()
     {
-        playerCurrentEnergy -= 20;
-        penaltyCheck();
+        playerCurrentEnergy -= 5;
+
+        gameObject.transform.position = checkPoint.transform.position;
+        playerTargetAgent.SetActive(false);
+
+        outOfCombat();
     }
 
     public void statsInfluence()
     {
-        playerDodge = playerDodge + playerDexterity;
+        playerDodge += playerDexterity;
 
-        playerMaxHealthPoints = playerMaxHealthPoints + 5 * playerVitality;
+        playerMaxHealthPoints += 5 * playerVitality;
 
-        playerMinAttackpower = playerMinAttackpower + playerStrength;
-        playerMaxAttackpower = playerMaxAttackpower + playerStrength;
+        playerMinAttackpower += playerStrength;
+        playerMaxAttackpower += playerStrength;
+
+        levelText.text = "Level: " + playerLevel;
+        dodgeText.text = "Dodge: " + playerDodge;
+        attackPowerText.text = "Damage: " + playerMinAttackpower + " - " + playerMaxAttackpower;
+        armorText.text = "Armor: " + playerArmor;
+
+        skillpointsText.text = "Skillpoints: " + playerSkillpoints;
+        strengthText.text = "Strength: " + playerStrength;
+        dexterityText.text = "Dexterity: " + playerDexterity;
+        vitalityText.text = "Vitality: " + playerVitality;
+
+        updateHealthBar();
     }
 
     public void penaltyCheck()
@@ -284,6 +355,137 @@ public class Player : MonoBehaviour
                 playerHealthpoints = playerMaxHealthPoints;
             }
         }
+
+        updateHealthBar();
+
     }
 
+    public void wearWeapon()
+    {
+
+    }
+
+    public void wearArmor()
+    {
+
+    }
+
+    public bool statusCheck(int strengthneeded, int dexterityneeded)
+    {
+
+        if (playerStrength == strengthneeded && playerDexterity == dexterityneeded || playerStrength > strengthneeded && playerDexterity > dexterityneeded)
+        {
+
+            return true;
+        }
+        else
+        {
+            
+            return false;
+        }
+    }
+
+    public void updateHealthBar()
+    {
+        HealthFill.fillAmount = (float)playerHealthpoints / (float)playerMaxHealthPoints;
+    }
+
+    public void updateXPBar()
+    {
+        XPFill.fillAmount = (float)playerCurrentExpierencePoints / (float)playerExpierencePointsToLevel;
+    }
+
+    public void updateEnergyBar()
+    {
+        energyFill.fillAmount = (float)playerCurrentEnergy / (float)playerMaxEnergy;
+    }
+
+    public void setEnemyTrigger(GameObject HostileTrigger)
+    {
+        EnemyTrigger = HostileTrigger;
+    }
+
+    public void setCheckPoint(Transform checkPointTrigger)
+    {
+        checkPoint = checkPointTrigger.transform;
+    }
+
+    public void braceyourselfAction()
+    {
+        if(gotBonus == false)
+        {
+            gotBonus = true;
+            playerDodge += 25;
+            playerArmor += 10;
+        }
+        Invoke("giveTurn", 0.35f);
+    }
+
+    public void removeBonus()
+    {
+        if (gotBonus == true)
+        {
+            gotBonus = false;
+            playerDodge -= 25;
+            playerArmor -= 10;
+        }
+    }
+
+    public void improveStatsActive()
+    {
+        improveDexterity.SetActive(true);
+        improveStrength.SetActive(true);
+        improveVitality.SetActive(true);
+    }
+
+    public void upgradeVitality()
+    {
+        playerVitality++;
+        playerSkillpoints--;
+        statsInfluence();
+        if (playerSkillpoints < 1)
+        {
+            improveDexterity.SetActive(false);
+            improveStrength.SetActive(false);
+            improveVitality.SetActive(false);
+        }
+    }
+
+    public void upgradeStrength()
+    {
+        playerStrength++;
+        playerSkillpoints--;
+        statsInfluence();
+        if (playerSkillpoints < 1)
+        {
+            improveDexterity.SetActive(false);
+            improveStrength.SetActive(false);
+            improveVitality.SetActive(false);
+        }
+    }
+
+    public void upgradeDexterity()
+    {
+        playerDexterity++;
+        playerSkillpoints--;
+        statsInfluence();
+        if (playerSkillpoints < 1)
+        {
+            improveDexterity.SetActive(false);
+            improveStrength.SetActive(false);
+            improveVitality.SetActive(false);
+        }
+    }
+
+    public void gameOverScreen()
+    {
+        GameObject[] GameObjects = (FindObjectsOfType<GameObject>() as GameObject[]);
+
+        for (int i = 0; i < GameObjects.Length; i++)
+        {
+            Destroy(GameObjects[i]);
+        }
+
+        SceneManager.LoadScene(4);
+    }
 }

@@ -45,6 +45,8 @@ public class Enemy : MonoBehaviour
     [SerializeField] private string combatReadyAnimationName;
     [SerializeField] private string dyingAnimationName;
 
+    [SerializeField] private GameObject myEnemyTrigger;
+
     public void Start()
     {
 
@@ -123,6 +125,8 @@ public class Enemy : MonoBehaviour
 
         creatureTargetAgentScript.outOfCombat();
         Invoke("dropLoot", 3);
+
+        Destroy(myEnemyTrigger);
     }
     public void getsTurn(bool turnCheck)
     {

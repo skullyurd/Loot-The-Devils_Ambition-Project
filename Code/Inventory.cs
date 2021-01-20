@@ -18,7 +18,7 @@ public class Inventory : MonoBehaviour
     public int maxSlots = 10;
     public int usedSlots = 0;
 
-    public GameObject[] interactableItems;
+    public List<Equipment> wearing;
 
     /*[SerializeField] public List<GameObject> medcineItems;
     [SerializeField] public List<GameObject> WeaponItems;
@@ -43,8 +43,22 @@ public class Inventory : MonoBehaviour
 
         usedSlots = 0;
         Items = new List<Item>();
-
+        wearing = new List<Equipment>();
     }
+
+    private void Start()
+    {
+        if(player == null)
+        {
+            player = GameObject.FindGameObjectWithTag("Player");
+        }
+
+        if (playerScript == null)
+        {
+            playerScript = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        }
+    }
+
     //methods
     public bool AddItem(Item i)
     {
@@ -80,18 +94,6 @@ public class Inventory : MonoBehaviour
         }
     }
 
-
-    private void Update()
-    {
-        if(Input.GetKeyUp(KeyCode.Alpha0))
-        {
-            for (int i = 0; i < Items.Count; i++)
-            {
-                Debug.Log(Items[i].name);
-            }
-        }
-
-    }
     public void useItem(Item b, string itemName)
     {
         playerScript.combatCheckResult();
@@ -124,6 +126,11 @@ public class Inventory : MonoBehaviour
 
                 Debug.Log(h.name);
                 Debug.Log(h.dodgePenalty);
+
+                if(playerScript.statusCheck(h.strengthNeeded, h.dexterityNeeded) == true)
+                {
+                    print("can wear");
+                }
 
 
             }

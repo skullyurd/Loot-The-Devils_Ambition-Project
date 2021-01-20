@@ -40,7 +40,6 @@ public class InventoryUIBase : MonoBehaviour
 
     public void RemoveUIItem(string name)
     {
-
         for (int i = 0; i < uiItems.Count; i++)
         {
             PIckUp p = uiItems[i];
@@ -48,19 +47,6 @@ public class InventoryUIBase : MonoBehaviour
             {
                 uiItems.Remove(p);
                 InventoryBase.instance.RemoveItem(p.item);
-                break;
-            }
-        }
-    }
-    public void useItemInventory(string itemName)
-    {
-        for (int i = 0; i < uiItems.Count; i++)
-        {
-            PIckUp p = uiItems[i];
-            if (p.item.name == itemName)
-            {
-
-                Inventory.instance.useItem(p.item, p.item.name);
                 break;
             }
         }

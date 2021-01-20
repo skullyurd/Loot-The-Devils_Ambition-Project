@@ -33,13 +33,8 @@ public class InventoryUIItem : MonoBehaviour
     public void useItem()
     {
         GameObject targetName = GameObject.Find(itemName.text);
-
-
-
         if (Player.instance.isInBase == true)
         {
-            Debug.Log("move to base");
-
             if (transform.parent.gameObject.name == "inventoryPanel_Base")
             {
                 InventoryUIBase.instance.identifyItem(itemName.text);
@@ -50,26 +45,17 @@ public class InventoryUIItem : MonoBehaviour
             }
             if (transform.parent.gameObject.name == "inventory_panel")
             {
-                
                 InventoryUI.instance.identifyItem(itemName.text);
 
                 InventoryUI.instance.RemoveUIItem(itemName.text);
                 Destroy(targetName);
                 return;
             }
-
-
-
-
-
-            
-
         }
 
         if (Player.instance.isInBase == false)
         {
             InventoryUI.instance.useItemInventory(itemName.text);
-
         }
     }
 }

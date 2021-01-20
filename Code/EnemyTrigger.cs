@@ -5,12 +5,11 @@ using UnityEngine;
 public class EnemyTrigger : MonoBehaviour
 {
 
-    [SerializeField] GameObject Enemy;
+    [SerializeField] private GameObject Enemy;
 
-    private void OnTriggerStay(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-
-        if(other.tag == "Player")
+        if (other.tag == "Player")
         {
             Enemy.SetActive(true);
             Player playerScript;
@@ -19,8 +18,7 @@ public class EnemyTrigger : MonoBehaviour
             enemyScript = Enemy.GetComponent<Enemy>();
             enemyScript.scanTarget();
             playerScript.CombatStarts();
-
-            Destroy(this.gameObject);
+            playerScript.setEnemyTrigger(this.gameObject);
         }
     }
 }

@@ -12,10 +12,13 @@ public class InventoryBase : MonoBehaviour
     [SerializeField] private GameObject player;
     [SerializeField] private Player playerScript;
 
-    private bool inCombatInventory;
+    [SerializeField] private int wood;
+    [SerializeField] private int iron;
+    [SerializeField] private int leather;
+    [SerializeField] private int stone;
 
     public List<Item> Items;
-    public int maxSlots = 10;
+    public int maxSlots = 32;
     public int usedSlots = 0;
 
     public GameObject[] interactableItems;
@@ -54,6 +57,7 @@ public class InventoryBase : MonoBehaviour
             Items.Add(i);
 
             usedSlots += i.slotSpace;
+            materialCheck();
 
             return true;
         }
@@ -61,10 +65,6 @@ public class InventoryBase : MonoBehaviour
         {
             return false;
         }
-    }
-    public int Count()
-    {
-        return Items.Count;
     }
 
     public bool RemoveItem(Item b)
@@ -80,69 +80,40 @@ public class InventoryBase : MonoBehaviour
         }
     }
 
-
-    private void Update()
+    public void materialCheck()
     {
-        if (Input.GetKeyUp(KeyCode.Alpha0))
+        foreach (Item b in Items)
         {
-            for (int i = 0; i < Items.Count; i++)
+            if (b != null)
             {
-                Debug.Log(Items[i].name);
+                if (b is CraftingMaterial)
+                {
+
+                    if(b.itemType == "Wood")
+                    {
+                        InventoryUIBase.instance.RemoveUIItem(b.name);
+                        wood++;
+                        return;
+                    }
+                    if (b.itemType == "Irom")
+                    {
+                        iron++;
+                        return;
+                    }
+                    if (b.itemType == "Leather")
+                    {
+                        leather++;
+                        return;
+                    }
+                    if (b.itemType == "Stone")
+                    {
+                        stone++;
+                        return;
+                    }
+
+                }
             }
         }
 
-    }
-    public void useItem(Item b, string itemName)
-    {
-        playerScript.combatCheckResult();
-
-        if (inCombatInventory == true)
-        {
-            playerScript.giveTurn();
-        }
-
-
-
-        if (b != null)
-        {
-            if (b is Consumable)
-            {
-
-                Consumable f = (Consumable)b;
-
-                playerScript.playerHeals(f.healthPointRestore);
-
-                InventoryUI.instance.RemoveUIItem(f.name);
-                GameObject Target = GameObject.Find(f.name);
-                Destroy(Target);
-
-            }
-
-            if (b is Armor)
-            {
-                Armor h = (Armor)b;
-
-                Debug.Log(h.name);
-                Debug.Log(h.dodgePenalty);
-
-
-            }
-
-            if (b is Weapon)
-            {
-                Weapon j = (Weapon)b;
-
-                Debug.Log(j.strengthNeeded);
-                Debug.Log(j.name);
-
-
-
-            }
-        }
-    }
-
-    public void combatCheckRequest(bool inCombat)
-    {
-        inCombatInventory = inCombat;
     }
 }

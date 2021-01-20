@@ -8,7 +8,7 @@ public class CameraFollowe : MonoBehaviour
 	public float speed = 0.125f;
 	public Vector3 offset;
 
-    private void Awake()
+    private void Start()
     {
         if (player == null)
         {
